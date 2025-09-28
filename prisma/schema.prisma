@@ -1,20 +1,99 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "sqlite"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Doctor {
+  id              String           @id @unique
+  email           String           @unique
+  firstName       String?
+  lastName        String?
+  specialty       String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  appointments    Appointment[]
+  patientReports  PatientReport[]
+  isAdmin         Boolean          @default(false)
+}
 
-    @@index([name])
+model Patient {
+  id              String           @id @default(cuid())
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime
+  gender          String
+  phone           String?
+  email           String?
+  address         String?
+  medicalRecordId String?          @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  appointments    Appointment[]
+  patientReports  PatientReport[]
+  prescriptions   Prescription[]
+
+  @@index([lastName, firstName])
+}
+
+model Appointment {
+  id              String           @id @default(cuid())
+  startTime       DateTime
+  endTime         DateTime
+  status          String           @default("SCHEDULED")
+  reason          String?
+  doctorId        String
+  doctor          Doctor           @relation(fields: [doctorId], references: [id])
+  patientId       String
+  patient         Patient          @relation(fields: [patientId], references: [id])
+  reportId        String?          @unique
+  report          PatientReport?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([startTime])
+}
+
+model PatientReport {
+  id              String           @id @default(cuid())
+  reportDate      DateTime         @default(now())
+  chiefComplaint  String?
+  diagnosis       String
+  treatmentPlan   String?
+  notes           String?
+  doctorId        String
+  doctor          Doctor           @relation(fields: [doctorId], references: [id])
+  patientId       String
+  patient         Patient          @relation(fields: [patientId], references: [id])
+  appointment     Appointment?     @relation(fields: [appointmentId], references: [id])
+  appointmentId   String?          @unique
+  prescriptions   Prescription[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([reportDate])
+}
+
+model Prescription {
+  id              String           @id @default(cuid())
+  medicationName  String
+  dosage          String
+  instructions    String
+  datePrescribed  DateTime         @default(now())
+  patientId       String
+  patient         Patient          @relation(fields: [patientId], references: [id])
+  reportId        String?
+  report          PatientReport?   @relation(fields: [reportId], references: [id])
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([patientId])
+  @@index([reportId])
 }
