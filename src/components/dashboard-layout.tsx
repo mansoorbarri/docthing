@@ -15,6 +15,8 @@ import {
 } from "~/components/ui/dropdown-menu"
 import { LayoutDashboard, Users, Calendar, FileText, Settings, Menu, X } from "lucide-react"
 import { cn } from "~/lib/utils"
+import { SignOutButton } from "@clerk/nextjs";
+import { LogOut } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -79,6 +81,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               )
             })}
           </nav>
+
+          {/* Logout Button */}
+          <div className="px-4 py-4 border-t border-sidebar-border">
+            <SignOutButton signOutOptions={{ redirectUrl: '/' }}>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-sidebar-foreground hover:bg-red-500/10 hover:text-red-500"
+              >
+                <LogOut className="h-5 w-5 mr-3" />
+                <span>Sign Out</span>
+              </Button>
+            </SignOutButton>
+          </div>
         </div>
       </div>
 
