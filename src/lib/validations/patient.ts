@@ -7,11 +7,10 @@ export const patientSchema = z.object({
   dateOfBirth: z.string().refine((val) => !isNaN(new Date(val).getTime()), {
     message: 'Invalid date of birth format.',
   }),
-  gender: z.enum(['Male', 'Female', 'Other'], {
+  gender: z.enum(['Male', 'Female', 'Other', 'Unknown'], {
     errorMap: () => ({ message: 'Invalid gender value.' }) 
   }),
   phone: z.string().optional().or(z.literal('')),
-  email: z.string().email('Invalid email format.').optional().or(z.literal('')),
   address: z.string().optional().or(z.literal('')),
   // Max length often needed for clinic system IDs
   CNIC: z.string().max(13, 'ID cannot exceed 13 characters.').optional().or(z.literal('')),

@@ -24,9 +24,8 @@ interface Patient {
   firstName: string
   lastName: string
   dateOfBirth: string
-  gender: 'Male' | 'Female' | 'Other'
+  gender: 'Male' | 'Female' | 'Other' | 'Unknown'
   phone: string
-  email?: string
   address: string
   CNIC: string
   lastAppointment?: string
@@ -71,7 +70,8 @@ const formatIsoDate = (dateString: string) => {
 export function PatientsView() {
   const [patients, setPatients] = useState<Patient[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [genderFilter, setGenderFilter] = useState("all")
+  // Change initial state from null to an empty string for the placeholder to work
+  const [genderFilter, setGenderFilter] = useState<string>("") // Changed from null
   const [loading, setLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   
@@ -93,9 +93,8 @@ export function PatientsView() {
       firstName: "",
       lastName: "",
       dateOfBirth: "",
-      gender: "Other", 
+      gender: "Unknown", 
       phone: "",
-      email: "",
       address: "",
       CNIC: "",
     },
@@ -299,7 +298,8 @@ export function PatientsView() {
         fullName.includes(searchTerm.toLowerCase()) ||
         patient.CNIC.toLowerCase().includes(searchTerm.toLowerCase())
       
-      const matchesGender = genderFilter === "all" || patient.gender.toLowerCase() === genderFilter.toLowerCase()
+      // Filter logic: if genderFilter is an empty string, it means "All"
+      const matchesGender = genderFilter === "" || patient.gender.toLowerCase() === genderFilter.toLowerCase();
       
       return matchesSearch && matchesGender
     })
@@ -391,6 +391,7 @@ export function PatientsView() {
                           <SelectItem value="Male">Male</SelectItem>
                           <SelectItem value="Female">Female</SelectItem>
                           <SelectItem value="Other">Other</SelectItem>
+                          <SelectItem value="Unknown">Unknown</SelectItem> 
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -411,17 +412,17 @@ export function PatientsView() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={newPatientForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email (Optional)</FormLabel>
-                      <FormControl><Input type="email" placeholder="john.smith@example.com" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={newPatientForm.control}
+                name="CNIC"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CNIC (National ID)</FormLabel>
+                    <FormControl><Input placeholder="12345-6789012-3" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               </div>
 
               <FormField
@@ -436,17 +437,6 @@ export function PatientsView() {
                 )}
               />
 
-              <FormField
-                control={newPatientForm.control}
-                name="CNIC"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CNIC (National ID)</FormLabel>
-                    <FormControl><Input placeholder="12345-6789012-3" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <DialogFooter className="pt-4">
                 <Button type="submit" disabled={newPatientForm.formState.isSubmitting}>
@@ -527,6 +517,7 @@ export function PatientsView() {
                             <SelectItem value="Male">Male</SelectItem>
                             <SelectItem value="Female">Female</SelectItem>
                             <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="Unknown">Unknown</SelectItem> 
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -547,17 +538,17 @@ export function PatientsView() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={editPatientForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email (Optional)</FormLabel>
-                        <FormControl><Input type="email" placeholder="john.smith@example.com" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={editPatientForm.control}
+                  name="CNIC"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CNIC (National ID)</FormLabel>
+                      <FormControl><Input placeholder="12345-6789012-3" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 </div>
 
                 <FormField
@@ -572,17 +563,6 @@ export function PatientsView() {
                   )}
                 />
 
-                <FormField
-                  control={editPatientForm.control}
-                  name="CNIC"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CNIC (National ID)</FormLabel>
-                      <FormControl><Input placeholder="12345-6789012-3" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <DialogFooter className="pt-4">
                   <Button type="submit" disabled={editPatientForm.formState.isSubmitting}>
@@ -631,10 +611,6 @@ export function PatientsView() {
                 <div>
                   <p className="text-sm text-muted-foreground">Phone</p>
                   <p className="font-mono text-sm">{selectedPatient.phone}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="text-sm">{selectedPatient.email || 'N/A'}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-sm text-muted-foreground">Address</p>
@@ -736,15 +712,15 @@ export function PatientsView() {
             </div>
             <div className="flex gap-2">
               <Select value={genderFilter} onValueChange={setGenderFilter}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-auto">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Gender" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Genders</SelectItem>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Unknown">Unknown</SelectItem> 
                 </SelectContent>
               </Select>
             </div>
@@ -834,7 +810,7 @@ export function PatientsView() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                      {searchTerm || genderFilter !== 'all'
+                      {searchTerm || genderFilter !== '' // Changed from 'all'
                         ? "No patients match your current filter."
                         : "No patient records found in the system."}
                     </TableCell>

@@ -7,7 +7,6 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    console.log(body)
     // ZOD VALIDATION
     const validatedData = patientSchema.parse(body);
 
@@ -18,7 +17,6 @@ export async function POST(request: Request) {
         dateOfBirth: new Date(validatedData.dateOfBirth), 
         gender: validatedData.gender,
         phone: validatedData.phone,
-        email: validatedData.email,
         address: validatedData.address,
         CNIC: validatedData.CNIC,
       },

@@ -25,7 +25,6 @@ model Patient {
   dateOfBirth     DateTime
   gender          String
   phone           String?
-  email           String?
   address         String?
   CNIC            String?          @unique
   createdAt       DateTime         @default(now())
