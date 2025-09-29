@@ -7,14 +7,14 @@ export const patientSchema = z.object({
   dateOfBirth: z.string().refine((val) => !isNaN(new Date(val).getTime()), {
     message: 'Invalid date of birth format.',
   }),
-  gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'UNKNOWN'], { 
+  gender: z.enum(['Male', 'Female', 'Other'], {
     errorMap: () => ({ message: 'Invalid gender value.' }) 
   }),
   phone: z.string().optional().or(z.literal('')),
   email: z.string().email('Invalid email format.').optional().or(z.literal('')),
   address: z.string().optional().or(z.literal('')),
   // Max length often needed for clinic system IDs
-  medicalRecordId: z.string().max(20, 'ID cannot exceed 20 characters.').optional().or(z.literal('')),
+  CNIC: z.string().max(13, 'ID cannot exceed 13 characters.').optional().or(z.literal('')),
 });
 
 // Schema for updating a patient (makes all fields optional)

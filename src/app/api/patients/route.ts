@@ -7,6 +7,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
+    console.log(body)
     // ZOD VALIDATION
     const validatedData = patientSchema.parse(body);
 
@@ -14,36 +15,35 @@ export async function POST(request: Request) {
       data: {
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
-        // Ensure conversion happens after successful Zod validation
         dateOfBirth: new Date(validatedData.dateOfBirth), 
         gender: validatedData.gender,
         phone: validatedData.phone,
         email: validatedData.email,
         address: validatedData.address,
-        medicalRecordId: validatedData.medicalRecordId,
+        CNIC: validatedData.CNIC,
       },
     });
-
+    
     return NextResponse.json(newPatient, { status: 201 });
-} catch (error) {
+  } catch (error) {
     if (error instanceof z.ZodError) {
-        // Return 400 Bad Request with Zod validation details
-        return NextResponse.json(
-            { error: "Invalid request data.", details: error.flatten().fieldErrors }, 
-            { status: 400 }
-        );
+      // Return 400 Bad Request with Zod validation details
+      return NextResponse.json(
+        { error: "Invalid request data.", details: error.flatten().fieldErrors }, 
+        { status: 400 }
+      );
     }
     
     // FIX: Type assertion to check for Prisma error properties
     const prismaError = error as { code?: string }; 
-
+    
     if (prismaError.code === 'P2002') {
-        return NextResponse.json(
-            { error: "Medical Record ID or unique field already exists." }, 
+      return NextResponse.json(
+            { error: "CNIC or unique field already exists." }, 
             { status: 409 }
         );
     }
-
+    
     return NextResponse.json(
       { error: "Failed to create patient record." },
       { status: 500 }
@@ -61,8 +61,9 @@ export async function GET() {
         firstName: true,
         lastName: true,
         dateOfBirth: true,
+        phone: true,
         gender: true,
-        medicalRecordId: true,
+        CNIC: true,
         createdAt: true,
       },
       orderBy: {

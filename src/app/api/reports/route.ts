@@ -62,7 +62,7 @@ export async function GET() {
         id: true,
         reportDate: true,
         diagnosis: true,
-        patient: { select: { id: true, firstName: true, lastName: true, medicalRecordId: true } },
+        patient: { select: { id: true, firstName: true, lastName: true, CNIC: true } },
         doctor: { select: { firstName: true, lastName: true, specialty: true } },
         appointmentId: true,
       },

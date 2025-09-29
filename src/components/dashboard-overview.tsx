@@ -6,109 +6,164 @@ import { Badge } from "~/components/ui/badge"
 import {
   Users,
   Calendar,
-  Clock,
-  TrendingUp,
   Activity,
   UserPlus,
   CalendarPlus,
   FileText,
-  AlertCircle,
+  TrendingUp,
+  Loader2,
+  Clock,
+  User, // For the new patient card
 } from "lucide-react"
+import { useUser } from "@clerk/nextjs";
+import { useState, useEffect } from "react"
 
-const stats = [
-  {
-    title: "Total Patients",
-    value: "2,847",
-    change: "+12%",
-    changeType: "positive" as const,
-    icon: Users,
-  },
-  {
-    title: "Today's Appointments",
-    value: "24",
-    change: "+3",
-    changeType: "positive" as const,
-    icon: Calendar,
-  },
-  {
-    title: "Pending Reviews",
-    value: "8",
-    change: "-2",
-    changeType: "positive" as const,
-    icon: Clock,
-  },
-  {
-    title: "Monthly Revenue",
-    value: "$45,231",
-    change: "+8.2%",
-    changeType: "positive" as const,
-    icon: TrendingUp,
-  },
-]
+// Define interfaces for API data structure
+interface Patient {
+  id: string
+  firstName: string
+  lastName: string
+  createdAt: string // Assuming your database returns a creation timestamp
+}
 
-const recentActivity = [
-  {
-    id: 1,
-    type: "appointment",
-    message: "New appointment scheduled with John Smith",
-    time: "2 minutes ago",
-    icon: CalendarPlus,
-  },
-  {
-    id: 2,
-    type: "patient",
-    message: "Patient record updated for Maria Garcia",
-    time: "15 minutes ago",
-    icon: Users,
-  },
-  {
-    id: 3,
-    type: "report",
-    message: "Monthly report generated successfully",
-    time: "1 hour ago",
-    icon: FileText,
-  },
-  {
-    id: 4,
-    type: "alert",
-    message: "Appointment reminder sent to 12 patients",
-    time: "2 hours ago",
-    icon: AlertCircle,
-  },
-]
+interface Appointment {
+  id: string
+  startTime: string
+  status: string
+  type?: string
+  patient: {
+    firstName: string
+    lastName: string
+  }
+}
 
-const upcomingAppointments = [
-  {
-    id: 1,
-    patient: "John Smith",
-    time: "9:00 AM",
-    type: "Consultation",
-    status: "confirmed",
-  },
-  {
-    id: 2,
-    patient: "Maria Garcia",
-    time: "10:30 AM",
-    type: "Follow-up",
-    status: "confirmed",
-  },
-  {
-    id: 3,
-    patient: "David Wilson",
-    time: "2:00 PM",
-    type: "Check-up",
-    status: "pending",
-  },
-  {
-    id: 4,
-    patient: "Sarah Brown",
-    time: "3:30 PM",
-    type: "Consultation",
-    status: "confirmed",
-  },
-]
+interface Stat {
+  title: string
+  value: number | string
+  change: string
+  changeType: "positive" | "negative"
+  icon: typeof Users
+}
+
+// Helper functions (kept the same)
+const isToday = (dateString: string) => {
+  const date = new Date(dateString)
+  const today = new Date()
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  )
+}
+
+// Helper to format time passed (for the new patients list)
+const timeAgo = (date: string) => {
+  const diff = Date.now() - new Date(date).getTime()
+  const seconds = Math.floor(diff / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+
+  if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`
+  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`
+  if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
+  return 'just now'
+}
 
 export function DashboardOverview() {
+  const { user } = useUser()
+  const [stats, setStats] = useState<Stat[]>([])
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [newPatients, setNewPatients] = useState<Patient[]>([]) // New state for recent patients
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true)
+      try {
+        // --- 1. Fetch Patients ---
+        const patientsRes = await fetch("/api/patients")
+        const patientsData: Patient[] = await patientsRes.json()
+        const totalPatients = patientsData.length
+
+        // Sort patients by creation date (descending) and take the top 4
+        const recentPatients = patientsData
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 4)
+        
+        setNewPatients(recentPatients) // Update new state
+
+        // --- 2. Fetch Appointments ---
+        const appointmentsRes = await fetch("/api/appointments")
+        const appointmentsData: Appointment[] = await appointmentsRes.json()
+        
+        // Filter for today's appointments
+        const todayAppointments = appointmentsData.filter((app) => isToday(app.startTime))
+        
+        setAppointments(todayAppointments.slice(0, 4))
+
+        // --- 3. Update Stats ---
+        const newStats: Stat[] = [
+          {
+            title: "Total Patients",
+            value: totalPatients.toLocaleString(),
+            change: "N/A",
+            changeType: "positive",
+            icon: Users,
+          },
+          {
+            title: "Today's Appointments",
+            value: todayAppointments.length.toString(),
+            change: "N/A",
+            changeType: "positive",
+            icon: Calendar,
+          },
+          {
+            title: "Open Reports",
+            value: "15",
+            change: "-5%",
+            changeType: "negative",
+            icon: FileText,
+          },
+          {
+            title: "Trends",
+            value: "Stable",
+            change: "+0.5%",
+            changeType: "positive",
+            icon: TrendingUp,
+          },
+        ]
+        setStats(newStats)
+
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, []) // Dependency array remains empty to run once on mount
+  
+  const firstName = user?.firstName || '';
+  
+  const formattedAppointments = appointments.map(app => ({
+    id: app.id,
+    patient: `${app.patient.firstName} ${app.patient.lastName}`,
+    time: new Date(app.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    type: app.type || 'Consultation',
+    status: app.status || 'confirmed',
+  }));
+
+  if (loading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="ml-2">Loading Dashboard...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -116,7 +171,7 @@ export function DashboardOverview() {
         <div>
           <h1 className="text-3xl font-bold text-balance">Dashboard Overview</h1>
           <p className="text-muted-foreground text-pretty">
-            Welcome back, Dr. Johnson. Here's what's happening at your clinic today.
+            Welcome back, Dr. {firstName}. Here's what's happening at your clinic today.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -156,38 +211,47 @@ export function DashboardOverview() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Recent Activity */}
+        {/* NEW PATIENTS CARD */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Activity className="h-5 w-5 mr-2" />
-              Recent Activity
+              <UserPlus className="h-5 w-5 mr-2" />
+              New Patients
             </CardTitle>
-            <CardDescription>Latest updates from your clinic</CardDescription>
+            <CardDescription>Recently added patient records.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity) => {
-                const Icon = activity.icon
-                return (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                        <Icon className="h-4 w-4 text-muted-foreground" />
+              {newPatients.length > 0 ? (
+                newPatients.map((patient) => (
+                  <div key={patient.id} className="flex items-start justify-between space-x-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0">
+                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                          <User className="h-4 w-4 text-blue-500" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{patient.firstName} {patient.lastName}</p>
+                        <p className="text-xs text-muted-foreground">
+                            Patient ID: {patient.id.slice(0, 8)}...
+                        </p>
                       </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-foreground">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
+                    <div className="flex items-center text-xs text-muted-foreground space-x-1">
+                      <Clock className="h-3 w-3" />
+                      <span>{timeAgo(patient.createdAt)}</span>
                     </div>
                   </div>
-                )
-              })}
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground pt-4">No new patients recorded yet.</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Today's Appointments */}
+        {/* Today's Appointments (Kept the same) */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -198,7 +262,7 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {upcomingAppointments.map((appointment) => (
+              {formattedAppointments.map((appointment) => (
                 <div key={appointment.id} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0">
@@ -218,6 +282,9 @@ export function DashboardOverview() {
                   </Badge>
                 </div>
               ))}
+              {formattedAppointments.length === 0 && (
+                <p className="text-center text-muted-foreground pt-4">No appointments scheduled for today.</p>
+              )}
             </div>
             <div className="mt-4 pt-4 border-t">
               <Button variant="outline" className="w-full bg-transparent">

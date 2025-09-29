@@ -4,18 +4,9 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "~/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu"
-import { LayoutDashboard, Users, Calendar, FileText, Settings, Menu, X } from "lucide-react"
+import { LayoutDashboard, Users, Calendar, FileText, Menu, X } from "lucide-react"
 import { cn } from "~/lib/utils"
-import { SignOutButton } from "@clerk/nextjs";
+import { SignOutButton, useUser } from "@clerk/nextjs";
 import { LogOut } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -31,6 +22,8 @@ const navigation = [
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const user = useUser()
 
   return (
     <div className="min-h-screen bg-background">
@@ -109,26 +102,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">Dr. Sarah Johnson</span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Profile Settings</DropdownMenuItem>
-                  <DropdownMenuItem>Preferences</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Sign Out</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="/caring-doctor.png" alt="Dr. Sarah Johnson" />
-                <AvatarFallback>SJ</AvatarFallback>
-              </Avatar>
+              <span className="text-sm text-muted-foreground">{user.user?.fullName}</span>
             </div>
           </div>
         </header>
