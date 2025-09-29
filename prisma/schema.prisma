@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Doctor {
-  id              String           @id @unique
+  clerkId         String           @id @unique
   email           String           @unique
   firstName       String?
   lastName        String?
@@ -46,7 +46,7 @@ model Appointment {
   status          String           @default("SCHEDULED")
   reason          String?
   doctorId        String
-  doctor          Doctor           @relation(fields: [doctorId], references: [id])
+  doctor          Doctor           @relation(fields: [doctorId], references: [clerkId])
   patientId       String
   patient         Patient          @relation(fields: [patientId], references: [id])
   reportId        String?          @unique
@@ -67,7 +67,7 @@ model PatientReport {
   treatmentPlan   String?
   notes           String?
   doctorId        String
-  doctor          Doctor           @relation(fields: [doctorId], references: [id])
+  doctor          Doctor           @relation(fields: [doctorId], references: [clerkId])
   patientId       String
   patient         Patient          @relation(fields: [patientId], references: [id])
   appointment     Appointment?     @relation(fields: [appointmentId], references: [id])
