@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const newDoctor = await db.doctor.create({
       data: validatedData,
       select: {
-        id: true,
+        clerkId: true,
         firstName: true,
         lastName: true,
         email: true,
@@ -50,7 +50,7 @@ export async function GET() {
   try {
     const doctors = await db.doctor.findMany({
       select: {
-        id: true,
+        clerkId: true,
         firstName: true,
         lastName: true,
         specialty: true,

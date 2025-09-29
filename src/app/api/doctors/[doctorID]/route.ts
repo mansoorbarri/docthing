@@ -15,7 +15,7 @@ export async function GET(request: Request, { params }: Params) {
   try {
     const doctor = await db.doctor.findUnique({
       where: {
-        id: doctorID,
+        clerkId: doctorID,
       },
       include: {
         patientReports: {
@@ -55,7 +55,7 @@ export async function PATCH(request: Request, { params }: Params) {
     
     const updatedDoctor = await db.doctor.update({
       where: {
-        id: doctorID,
+        clerkId: doctorID,
       },
       data: validatedData,
     });
@@ -99,7 +99,7 @@ export async function DELETE(request: Request, { params }: Params) {
   try {
     await db.doctor.delete({
       where: {
-        id: doctorID,
+        clerkId: doctorID,
       },
     });
 
