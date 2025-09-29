@@ -9,7 +9,6 @@ datasource db {
 
 model Doctor {
   clerkId         String           @id @unique
-  email           String           @unique
   firstName       String?
   lastName        String?
   specialty       String?
@@ -17,7 +16,6 @@ model Doctor {
   updatedAt       DateTime         @updatedAt
   appointments    Appointment[]
   patientReports  PatientReport[]
-  isAdmin         Boolean          @default(false)
 }
 
 model Patient {

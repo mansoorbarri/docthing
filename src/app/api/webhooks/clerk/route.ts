@@ -2,6 +2,7 @@
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { db } from '~/server/db';
+import type { User } from '@clerk/nextjs/server';
 
 const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
@@ -35,34 +36,62 @@ export async function POST(req: Request) {
   }
 
   const eventType = evt.type;
+  const data = evt.data as User;
   
-  if (eventType === 'user.created') {
-    const { id, email_addresses, first_name, last_name } = evt.data;
+  try {
+    switch (eventType) {
+      case 'user.created': {
+        
+        await db.doctor.create({
+          data: {
+            clerkId: data.id,
+            firstName: data.firstName ?? null,
+            lastName: data.lastName ?? null,
+            specialty: 'Unassigned',
+          },
+          select: {
+            clerkId: true,
+            firstName: true,
+            lastName: true,
+            specialty: true,
+          }
+        });
+        break;
+      }
+
+      case 'user.updated': {
+        
+        await db.doctor.upsert({
+            where: { clerkId: data.id },
+            update: {
+                firstName: data.firstName ?? null,
+                lastName: data.lastName ?? null,
+            },
+            create: { 
+                clerkId: data.id,
+                firstName: data.firstName ?? null,
+                lastName: data.lastName ?? null,
+                specialty: 'Unassigned',
+            },
+        });
+        break;
+      }
+
+      case 'user.deleted': {
+        
+        await db.doctor.delete({
+          where: { clerkId: data.id },
+        });
+        break;
+      }
+
+      default:
+        return new Response('Event type not handled', { status: 200 });
+    }
+
+    return new Response('User Synced to DB', { status: 200 });
     
-    const email = email_addresses.find((e: any) => e.id === evt.data.primary_email_address_id)?.email_address ?? email_addresses[0]?.email_address;
-
-    if (!email) {
-        return new Response('User created event missing primary email', { status: 400 });
-    }
-
-    try {
-      await db.doctor.create({
-        data: {
-          clerkId: id,
-          email: email,
-          firstName: first_name ?? null,
-          lastName: last_name ?? null,
-          specialty: 'Unassigned',
-          isAdmin: false,
-        },
-      });
-
-      return new Response('User Synced to DB', { status: 200 });
-
-    } catch (dbError) {
-      return new Response('Database Error', { status: 500 });
-    }
+  } catch (dbError) {
+    return new Response('Database Error: Could not process event', { status: 500 });
   }
-
-  return new Response('Event handled successfully or ignored', { status: 200 });
 }
