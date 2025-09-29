@@ -58,6 +58,7 @@ export async function POST(req: Request) {
         });
         break;
       }
+      console.log(data);
 
       case 'user.updated': {
         
