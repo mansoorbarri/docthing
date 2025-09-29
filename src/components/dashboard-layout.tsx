@@ -17,7 +17,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard, current: true },
   { name: "Patients", href: "/patients", icon: Users, current: false },
   { name: "Appointments", href: "/appointments", icon: Calendar, current: false },
-  { name: "Reports", href: "/reports", icon: FileText, current: false },
+  { name: "Reports", href: "/appointments/reports", icon: FileText, current: false },
 ]
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
