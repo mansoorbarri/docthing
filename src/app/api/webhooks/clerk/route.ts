@@ -1,8 +1,13 @@
-// src/app/api/webhooks/clerk/route.ts
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { db } from '~/server/db';
 import type { User } from '@clerk/nextjs/server';
+
+interface ClerkWebhookUserData {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+}
 
 const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
@@ -36,7 +41,7 @@ export async function POST(req: Request) {
   }
 
   const eventType = evt.type;
-  const data = evt.data as User;
+  const data = evt.data as ClerkWebhookUserData;
   
   try {
     switch (eventType) {
@@ -45,8 +50,8 @@ export async function POST(req: Request) {
         await db.doctor.create({
           data: {
             clerkId: data.id,
-            firstName: data.firstName ?? null,
-            lastName: data.lastName ?? null,
+            firstName: data.first_name ?? null,
+            lastName: data.last_name ?? null,
             specialty: 'Unassigned',
           },
           select: {
@@ -58,20 +63,19 @@ export async function POST(req: Request) {
         });
         break;
       }
-      console.log(data);
 
       case 'user.updated': {
         
         await db.doctor.upsert({
             where: { clerkId: data.id },
             update: {
-                firstName: data.firstName ?? null,
-                lastName: data.lastName ?? null,
+                firstName: data.first_name ?? null,
+                lastName: data.last_name ?? null,
             },
             create: { 
                 clerkId: data.id,
-                firstName: data.firstName ?? null,
-                lastName: data.lastName ?? null,
+                firstName: data.first_name ?? null,
+                lastName: data.last_name ?? null,
                 specialty: 'Unassigned',
             },
         });
