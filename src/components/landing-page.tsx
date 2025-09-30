@@ -61,7 +61,7 @@ export function LandingPage() {
             </div>
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/dashboard">Demo</Link>
               </Button>
               <Button size="sm" asChild>
                 <Link href="/">Get Started</Link>
