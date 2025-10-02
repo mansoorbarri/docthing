@@ -16,7 +16,7 @@ const allNavigationItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Appointments", href: "/appointments", icon: Calendar },
   { name: "Patients", href: "/patients", icon: Users },
-  { name: "Appointment Reports", href: "/appointments/reports", icon: FileText },
+  { name: "Appointment Notes", href: "/appointment-notes", icon: FileText },
   { name: "Dispenser", href: "/dispenser", icon: Stethoscope },
   { name: "Inventory", href: "/inventory", icon: Package },
 ];
@@ -31,6 +31,10 @@ const rolePermissions: Record<Role, NavigationName[]> = {
   receptionist: ["Dashboard", "Appointments", "Patients"],
 };
 
+// Function to convert a Navigation Name to a URL-friendly slug
+const getSlug = (name: string): string => {
+  return `/${name.toLowerCase().replace(/\s/g, '-')}`;
+};
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -50,9 +54,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     
     const requiredNames = rolePermissions[userRole as Role];
 
-    return allNavigationItems.filter(item => 
-      requiredNames.includes(item.name as NavigationName)
-    );
+    return allNavigationItems
+      .filter(item => requiredNames.includes(item.name as NavigationName))
+      .map(item => {
+        // Construct the dynamic href: /userRole/slug
+        const slug = getSlug(item.name);
+        
+        // Dashboard is typically /dashboard, not /role/dashboard.
+        // For all other links, use the dynamic path structure.
+        const dynamicHref = item.name === 'Dashboard' ? item.href : `/${userRole}${slug}`;
+
+        // Return a new item with the dynamic href
+        return {
+          ...item,
+          href: dynamicHref,
+        };
+      });
   }, [userRole]);
 
   if (!isLoaded) {
@@ -95,11 +112,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon
+              // The isCurrent logic needs to check against the calculated dynamic href
               const isCurrent = typeof window !== 'undefined' && window.location.pathname.startsWith(item.href) && (item.href !== '/dashboard' || window.location.pathname === '/dashboard');
 
               return (
                 <a
                   key={item.name}
+                  // ITEM.HREF NOW USES THE DYNAMIC VALUE CALCULATED ABOVE
                   href={item.href}
                   className={cn(
                     "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",

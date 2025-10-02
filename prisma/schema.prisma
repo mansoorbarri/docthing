@@ -80,9 +80,6 @@ model PatientReport {
 
 model Prescription {
   id              String           @id @default(cuid())
-  medicationName  String
-  dosage          String
-  instructions    String
   datePrescribed  DateTime         @default(now())
   patientId       String
   patient         Patient          @relation(fields: [patientId], references: [id])
@@ -90,10 +87,10 @@ model Prescription {
   report          PatientReport?   @relation(fields: [reportId], references: [id])
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+  prescriptionMedicines PrescriptionMedicine[]
 
   @@index([patientId])
   @@index([reportId])
-  Dispensation Dispensation[]
 }
 
 model InventoryItem {
@@ -105,23 +102,30 @@ model InventoryItem {
   reorderPoint Int            @default(10)
   pricePerUnit Float
   supplier     String?
-  dispensations Dispensation[]
+  prescriptionMedicines PrescriptionMedicine[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 }
 
-model Dispensation {
+model PrescriptionMedicine {
   id              String          @id @default(cuid())
-  prescriptionId  String          @unique
+  medicationName  String
+  dosage          String
+  instructions    String
+  quantity        Int
+  
+  prescriptionId  String
   prescription    Prescription    @relation(fields: [prescriptionId], references: [id])
   inventoryItemId String
   inventoryItem   InventoryItem   @relation(fields: [inventoryItemId], references: [id])
-  quantity        Int
-  dispensedBy     String
-  dateDispensed   DateTime        @default(now())
+  
+  dispensedBy     String?
+  dateDispensed   DateTime?
+  
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
   @@index([prescriptionId])
   @@index([inventoryItemId])
+  @@unique([prescriptionId, inventoryItemId])
 }
