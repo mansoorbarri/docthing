@@ -11,12 +11,12 @@ import {
   CalendarPlus,
   FileText,
   TrendingUp,
-  Loader2,
   Clock,
   User, // For the new patient card
 } from "lucide-react"
 import { useUser } from "@clerk/nextjs";
 import { useState, useEffect } from "react"
+import { Loading } from "~/components/loading";
 
 // Define interfaces for API data structure
 interface Patient {
@@ -156,12 +156,7 @@ export function DashboardOverview() {
   }));
 
   if (loading) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="ml-2">Loading Dashboard...</p>
-      </div>
-    )
+    <Loading />
   }
 
   return (
