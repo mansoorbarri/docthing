@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const newItem = await db.inventoryItem.create({
       data: validatedData,
     });
-
+    console.log(newItem);
     return NextResponse.json(newItem, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -17,8 +17,8 @@ const allNavigationItems = [
   { name: "Appointments", href: "/appointments", icon: Calendar },
   { name: "Patients", href: "/patients", icon: Users },
   { name: "Appointment Notes", href: "/appointment-notes", icon: FileText },
-  { name: "Dispenser", href: "/dispenser", icon: Stethoscope },
   { name: "Inventory", href: "/inventory", icon: Package },
+  { name: "Dispenser", href: "/dispenser", icon: Stethoscope },
 ];
 
 type Role = "doctor" | "pharmacist" | "admin" | "receptionist";
